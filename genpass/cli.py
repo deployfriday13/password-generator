@@ -67,8 +67,11 @@ def main_password():
         print(e)
         sys.exit(1)
 
+    no_copy = "--no-copy" in args or count > 1
+
     if count == 1:
-        copy_to_clipboard(passwords[0])
+        if not no_copy:
+            copy_to_clipboard(passwords[0])
         print(f"PASS: {passwords[0]}")
     else:
         for i, p in enumerate(passwords, 1):
@@ -89,8 +92,11 @@ def main_phrase():
         print(e)
         sys.exit(1)
 
+    no_copy = "--no-copy" in args or count > 1
+
     if count == 1:
-        copy_to_clipboard(passwords[0])
+        if not no_copy:
+            copy_to_clipboard(passwords[0])
         print(f"PASS: {passwords[0]}")
     else:
         for i, p in enumerate(passwords, 1):
