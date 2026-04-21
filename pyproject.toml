@@ -9,6 +9,10 @@ description = "Simple password and passphrase generator"
 readme = "README.md"
 requires-python = ">=3.14"
 
+[project.scripts]
+pw = "genpass.cli:main_password"
+pwp = "genpass.cli:main_phrase"
+
 [tool.ruff]
 line-length = 88
 target-version = "py313"
