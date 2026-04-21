@@ -13,6 +13,14 @@ FLAG_MAP: dict[str, str] = {
 }
 
 
+def _entropy_label(bits: float) -> str:
+    if bits < 50:
+        return "weak"
+    if bits < 80:
+        return "good"
+    return "strong"
+
+
 def _parse_n(args: list[str]) -> int:
     if "-n" in args:
         i = args.index("-n")
@@ -77,7 +85,7 @@ def main_password():
         for i, p in enumerate(passwords, 1):
             print(f"{i:>2}. {p}")
 
-    print(f"Entropy: {entropy:.0f} bit")
+    print(f"Entropy: {entropy:.0f} bit ({_entropy_label(entropy)})")
 
 
 def main_phrase():
@@ -102,7 +110,7 @@ def main_phrase():
         for i, p in enumerate(passwords, 1):
             print(f"{i:>2}. {p}")
 
-    print(f"Entropy: {entropy:.0f} bit")
+    print(f"Entropy: {entropy:.0f} bit ({_entropy_label(entropy)})")
 
 
 if __name__ == "__main__":
