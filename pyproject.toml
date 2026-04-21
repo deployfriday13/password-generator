@@ -1,7 +1,18 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "password-generator"
 version = "0.1.0"
-description = "Add your description here"
+description = "Simple password and passphrase generator"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "C90"]
+max-complexity = 10
