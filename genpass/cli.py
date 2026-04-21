@@ -13,9 +13,18 @@ FLAG_MAP: dict[str, str] = {
 }
 
 
-def parse_password_args(args: list[str], defaults: dict) -> tuple[int, dict[str, bool]]:
+def _parse_n(args: list[str]) -> int:
+    if "-n" in args:
+        i = args.index("-n")
+        if i + 1 < len(args) and args[i + 1].isdigit():
+            return int(args[i + 1])
+    return 1
+
+
+def parse_password_args(args: list[str], defaults: dict) -> tuple[int, int, dict[str, bool]]:
     length = defaults["length"]
     charsets = {k: defaults[k] for k in ("uppercase", "lowercase", "digits", "symbols")}
+    count = _parse_n(args)
 
     if args and args[0].isdigit():
         length = int(args[0])
@@ -24,12 +33,13 @@ def parse_password_args(args: list[str], defaults: dict) -> tuple[int, dict[str,
         if flag in args:
             charsets[key] = False
 
-    return length, charsets
+    return length, count, charsets
 
 
-def parse_phrase_args(args: list[str], defaults: dict) -> tuple[int, str]:
+def parse_phrase_args(args: list[str], defaults: dict) -> tuple[int, int, str]:
     length = defaults["length"]
     delimiter = defaults["delimiter"]
+    count = _parse_n(args)
 
     if args and args[0].isdigit():
         length = int(args[0])
@@ -39,45 +49,53 @@ def parse_phrase_args(args: list[str], defaults: dict) -> tuple[int, str]:
         if i + 1 < len(args):
             delimiter = args[i + 1]
 
-    return length, delimiter
+    return length, count, delimiter
 
 
 def main_password():
     args: list[str] = sys.argv[1:]
     config = load_config()
-    length, parsed_charsets = parse_password_args(args, config["password"])
+    length, count, parsed_charsets = parse_password_args(args, config["password"])
 
     charsets: set[CharSet] = charsets_from_flags(**parsed_charsets)
     alphabet: str = build_alphabet(charsets)
+    entropy = calculate_entropy(len(set(alphabet)), length)
 
     try:
-        password: str = generate_password(alphabet, length)
-        entropy = calculate_entropy(len(set(alphabet)), length)
-
-        copy_to_clipboard(password)
+        passwords = [generate_password(alphabet, length) for _ in range(count)]
     except ValueError as e:
         print(e)
         sys.exit(1)
 
-    print(f"PASS: {password}")
+    if count == 1:
+        copy_to_clipboard(passwords[0])
+        print(f"PASS: {passwords[0]}")
+    else:
+        for i, p in enumerate(passwords, 1):
+            print(f"{i:>2}. {p}")
+
     print(f"Entropy: {entropy:.0f} bit")
 
 
 def main_phrase():
     args: list[str] = sys.argv[1:]
     config = load_config()
-    length, delimiter = parse_phrase_args(args, config["phrase"])
+    length, count, delimiter = parse_phrase_args(args, config["phrase"])
+    entropy = calculate_entropy(7776, length)
 
     try:
-        password: str = generate_passphrase(length=length, separator=delimiter)
-        entropy = calculate_entropy(7776, length)
-
-        copy_to_clipboard(password)
+        passwords = [generate_passphrase(length=length, separator=delimiter) for _ in range(count)]
     except ValueError as e:
         print(e)
         sys.exit(1)
 
-    print(f"PASS: {password}")
+    if count == 1:
+        copy_to_clipboard(passwords[0])
+        print(f"PASS: {passwords[0]}")
+    else:
+        for i, p in enumerate(passwords, 1):
+            print(f"{i:>2}. {p}")
+
     print(f"Entropy: {entropy:.0f} bit")
 
 
