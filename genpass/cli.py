@@ -2,6 +2,7 @@ import sys
 
 from .charset import CharSet, build_alphabet, charsets_from_flags
 from .clipboard import copy_to_clipboard
+from .config import load_config
 from .generator import calculate_entropy, generate_passphrase, generate_password
 
 FLAG_MAP: dict[str, str] = {
@@ -12,23 +13,9 @@ FLAG_MAP: dict[str, str] = {
 }
 
 
-def parse_password_args(args: list[str]) -> tuple[int, dict[str, bool]]:
-    """Parse CLI arguments for password generation.
-
-    The first argument is treated as length if it is a positive integer.
-    Remaining arguments are matched against FLAG_MAP to disable charsets.
-
-    Example:
-        >>> parse_password_args(["20", "--no-digits"])
-        (20, {"uppercase": True, "lowercase": True, "digits": False, "symbols": True})
-    """
-    length = 15
-    charsets = {
-        "uppercase": True,
-        "lowercase": True,
-        "digits": True,
-        "symbols": True,
-    }
+def parse_password_args(args: list[str], defaults: dict) -> tuple[int, dict[str, bool]]:
+    length = defaults["length"]
+    charsets = {k: defaults[k] for k in ("uppercase", "lowercase", "digits", "symbols")}
 
     if args and args[0].isdigit():
         length = int(args[0])
@@ -40,18 +27,9 @@ def parse_password_args(args: list[str]) -> tuple[int, dict[str, bool]]:
     return length, charsets
 
 
-def parse_phrase_args(args: list[str]) -> tuple[int, str]:
-    """Parse CLI arguments for passphrase generation.
-
-    The first argument is treated as word count if it is a positive integer.
-    --delimiter VALUE sets the word separator (default: "-").
-
-    Example:
-        >>> parse_phrase_args(["3", "--delimiter", "_"])
-        (3, "_")
-    """
-    length = 6
-    delimiter = "-"
+def parse_phrase_args(args: list[str], defaults: dict) -> tuple[int, str]:
+    length = defaults["length"]
+    delimiter = defaults["delimiter"]
 
     if args and args[0].isdigit():
         length = int(args[0])
@@ -66,7 +44,8 @@ def parse_phrase_args(args: list[str]) -> tuple[int, str]:
 
 def main_password():
     args: list[str] = sys.argv[1:]
-    length, parsed_charsets = parse_password_args(args)
+    config = load_config()
+    length, parsed_charsets = parse_password_args(args, config["password"])
 
     charsets: set[CharSet] = charsets_from_flags(**parsed_charsets)
     alphabet: str = build_alphabet(charsets)
@@ -86,7 +65,8 @@ def main_password():
 
 def main_phrase():
     args: list[str] = sys.argv[1:]
-    length, delimiter = parse_phrase_args(args)
+    config = load_config()
+    length, delimiter = parse_phrase_args(args, config["phrase"])
 
     try:
         password: str = generate_passphrase(length=length, separator=delimiter)
